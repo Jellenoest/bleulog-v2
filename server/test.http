@@ -1,0 +1,41 @@
+### Health
+GET http://localhost:4000/api/health
+
+###
+
+### Alle duiken
+GET http://localhost:4000/api/dives
+
+###
+
+### Nieuwe duik
+POST http://localhost:4000/api/dives
+Content-Type: application/json
+
+{
+  "id": "test-1",
+  "diveNumber": 1,
+  "date": "2026-08-02",
+  "location": "Vinkeveen",
+  "country": "Nederland",
+  "buddy": "Buddy",
+  "latitude": 52.225,
+  "longitude": 4.921,
+  "diveType": "Boot",
+  "nightDive": false,
+  "driftDive": false,
+  "altitudeDive": false,
+  "maxDepth": 18,
+  "duration": 42,
+  "waterType": "Zoet",
+  "waterTemperature": 18,
+  "visibility": 6,
+  "weight": 8,
+  "suit": "Natpak 7mm",
+  "cylinder": "12L",
+  "gas": "Lucht",
+  "startPressure": 200,
+  "endPressure": 60,
+  "notes": "Testduik",
+  "photos": []
+}
