@@ -55,3 +55,8 @@ Backups/
 *.db
 *.sqlite
 *.sqlite3
+# Local setup / archive files
+*.zip
+bluelog-setup.sh
+package-json-change.txt
+components/DiveForm.GPS.patch.txt
