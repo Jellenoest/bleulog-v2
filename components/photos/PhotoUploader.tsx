@@ -353,7 +353,7 @@ export default function PhotoUploader({
                       index
                     )
                   }
-                  className="absolute right-2 top-2 rounded-lg bg-red-600 px-3 py-1 text-sm font-semibold text-white opacity-0 transition group-hover:opacity-100 hover:bg-red-500"
+                  className="absolute right-2 top-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-red-500 md:opacity-0 md:group-hover:opacity-100"
                 >
                   ✕
                 </button>
