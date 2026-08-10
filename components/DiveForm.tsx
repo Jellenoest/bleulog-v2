@@ -177,6 +177,7 @@ export default function DiveForm({
       (position) => {
         setForm((prev) => ({
           ...prev,
+          location: prev.location || "GPS locatie",
           latitude: Number(
             position.coords.latitude.toFixed(6)
           ),
@@ -240,6 +241,14 @@ export default function DiveForm({
       country: site.country,
       latitude: site.latitude,
       longitude: site.longitude,
+      waterType:
+        site.waterType === "Zoet" || site.waterType === "Zout"
+          ? site.waterType
+          : prev.waterType,
+      diveType:
+        site.entryType === "Kant" || site.entryType === "Boot"
+          ? site.entryType
+          : prev.diveType,
     }))
   }
 />
