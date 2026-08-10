@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export type DiveSite = {
   id: string;
@@ -28,89 +28,128 @@ export default function DiveSiteSearch({
   onSelect,
 }: Props) {
   const [query, setQuery] = useState(value);
-  const [results, setResults] = useState<DiveSite[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [sites, setSites] = useState<DiveSite[]>([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setQuery(value);
   }, [value]);
 
   useEffect(() => {
-    if (query.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+    let active = true;
 
-    const timer = setTimeout(async () => {
+    async function loadSites() {
       try {
         setLoading(true);
-
-        const response = await fetch(
-          `/api/dive-sites/search?q=${encodeURIComponent(query)}`
-        );
+        const response = await fetch("/api/dive-sites", {
+          cache: "no-store",
+        });
 
         if (!response.ok) {
-          setResults([]);
-          return;
+          throw new Error(`HTTP ${response.status}`);
         }
 
         const data: DiveSite[] = await response.json();
 
-        setResults(data);
-      } catch (error) {
-        console.error(error);
-        setResults([]);
+        if (active) {
+          setSites(data);
+          setError("");
+        }
+      } catch (err) {
+        console.error(err);
+        if (active) {
+          setError("Duikstekken konden niet worden geladen.");
+        }
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
-    }, 300);
+    }
 
-    return () => clearTimeout(timer);
-  }, [query]);
+    loadSites();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const filteredSites = useMemo(() => {
+    const q = query.trim().toLowerCase();
+
+    if (!q) return sites;
+
+    return sites.filter((site) =>
+      [
+        site.name,
+        site.region,
+        site.country,
+        site.code,
+      ].some((text) =>
+        String(text ?? "").toLowerCase().includes(q)
+      )
+    );
+  }, [query, sites]);
 
   return (
     <div className="relative w-full">
-
       <input
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Zoek een bekende duikstek..."
+        onFocus={() => setOpen(true)}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setOpen(true);
+        }}
+        onBlur={() => {
+          window.setTimeout(() => setOpen(false), 150);
+        }}
+        placeholder="Zoek of kies een bekende duikstek..."
         className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3"
       />
 
       {loading && (
         <p className="mt-2 text-sm text-slate-400">
-          Zoeken...
+          Duikstekken laden...
         </p>
       )}
 
-      {results.length > 0 && (
-        <div className="absolute left-0 right-0 z-50 mt-2 max-h-80 overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
-
-          {results.map((site) => (
-            <button
-              key={site.id}
-              type="button"
-              onClick={() => {
-                onSelect(site);
-                setQuery(site.name);
-                setResults([]);
-              }}
-              className="block w-full border-b border-slate-800 px-4 py-3 text-left hover:bg-slate-800"
-            >
-              <div className="font-semibold">
-                {site.name}
-              </div>
-
-              <div className="text-sm text-slate-400">
-                {site.region} • {site.country}
-              </div>
-            </button>
-          ))}
-
-        </div>
+      {error && (
+        <p className="mt-2 text-sm text-amber-400">
+          {error}
+        </p>
       )}
 
+      {open && !loading && (
+        <div className="absolute left-0 right-0 z-50 mt-2 max-h-80 overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
+          {filteredSites.length === 0 ? (
+            <div className="px-4 py-3 text-sm text-slate-400">
+              Geen bekende duikstek gevonden. Je kunt de naam zelf invullen en
+              de locatie op de kaart aanwijzen.
+            </div>
+          ) : (
+            filteredSites.map((site) => (
+              <button
+                key={site.id}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onSelect(site);
+                  setQuery(site.name);
+                  setOpen(false);
+                }}
+                className="block w-full border-b border-slate-800 px-4 py-3 text-left hover:bg-slate-800"
+              >
+                <div className="font-semibold">
+                  {site.name}
+                </div>
+                <div className="text-sm text-slate-400">
+                  {site.region} • {site.country}
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
