@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { createClient } from "@/lib/supabase/server";
 
 function rowToDive(row: any) {
   return {
@@ -15,10 +16,31 @@ function rowToDive(row: any) {
   };
 }
 
+async function getCurrentUser() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data.user) {
+    return null;
+  }
+
+  return data.user;
+}
+
 export async function GET() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "Niet ingelogd." },
+      { status: 401 }
+    );
+  }
+
   const { data, error } = await supabaseAdmin
     .from("dives")
     .select("*")
+    .eq("user_id", user.id)
     .order("dive_number", { ascending: false });
 
   if (error) {
@@ -34,17 +56,25 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "Niet ingelogd." },
+      { status: 401 }
+    );
+  }
+
   const dive = await request.json();
 
   let diveNumber = Number(dive.diveNumber) || 0;
 
-  // Als er geen geldig nummer is meegestuurd,
-  // bepaal automatisch het volgende duiknummer.
   if (diveNumber <= 0) {
     const { data: lastDive, error: numberError } =
       await supabaseAdmin
         .from("dives")
         .select("dive_number")
+        .eq("user_id", user.id)
         .order("dive_number", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -69,6 +99,7 @@ export async function POST(request: Request) {
     .from("dives")
     .insert({
       id: dive.id,
+      user_id: user.id,
       dive_number: diveNumber,
       date: dive.date || null,
       location: dive.location ?? "",

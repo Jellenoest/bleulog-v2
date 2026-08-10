@@ -2,6 +2,7 @@ create extension if not exists pgcrypto;
 
 create table if not exists public.dives (
   id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
   dive_number integer not null default 0,
   date date,
   location text not null default '',
