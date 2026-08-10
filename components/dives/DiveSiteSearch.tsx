@@ -77,7 +77,7 @@ export default function DiveSiteSearch({
   const filteredSites = useMemo(() => {
     const q = query.trim().toLowerCase();
 
-    if (!q) return sites;
+    if (q.length < 3) return [];
 
     return sites.filter((site) =>
       [
@@ -119,7 +119,13 @@ export default function DiveSiteSearch({
         </p>
       )}
 
-      {open && !loading && (
+      {!loading && !error && query.trim().length > 0 && query.trim().length < 3 && (
+        <p className="mt-2 text-sm text-slate-400">
+          Typ minimaal 3 letters om een bekende duikstek te zoeken.
+        </p>
+      )}
+
+      {open && !loading && query.trim().length >= 3 && (
         <div className="absolute left-0 right-0 z-50 mt-2 max-h-80 overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
           {filteredSites.length === 0 ? (
             <div className="px-4 py-3 text-sm text-slate-400">
