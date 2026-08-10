@@ -46,6 +46,102 @@ export default function DivesPage() {
     }
   }
 
+
+  function downloadFile(
+    filename: string,
+    content: string,
+    type: string
+  ) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  function exportJson() {
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    downloadFile(
+      `bluelog-backup-${stamp}.json`,
+      JSON.stringify(
+        {
+          exportedAt: new Date().toISOString(),
+          totalDives: dives.length,
+          dives,
+        },
+        null,
+        2
+      ),
+      "application/json"
+    );
+  }
+
+  function csvValue(value: unknown) {
+    const text = String(value ?? "");
+    return `"${text.replaceAll('"', '""')}"`;
+  }
+
+  function exportCsv() {
+    const headers = [
+      "diveNumber",
+      "date",
+      "location",
+      "country",
+      "buddy",
+      "latitude",
+      "longitude",
+      "diveType",
+      "maxDepth",
+      "averageDepth",
+      "duration",
+      "waterType",
+      "waterTemperature",
+      "visibility",
+      "current",
+      "weight",
+      "suit",
+      "cylinder",
+      "gas",
+      "startPressure",
+      "endPressure",
+      "airConsumption",
+      "notes",
+      "photos",
+    ];
+
+    const rows = dives.map((dive) =>
+      headers
+        .map((key) => {
+          const record =
+            dive as unknown as Record<string, unknown>;
+
+          const value =
+            key === "photos"
+              ? Array.isArray(dive.photos)
+                ? dive.photos.join(" | ")
+                : ""
+              : record[key];
+
+          return csvValue(value);
+        })
+        .join(",")
+    );
+
+    const csv = [headers.join(","), ...rows].join("\n");
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    downloadFile(
+      `bluelog-duiken-${stamp}.csv`,
+      "\uFEFF" + csv,
+      "text/csv;charset=utf-8"
+    );
+  }
+
   const buddies = [
     "Alle",
     ...new Set(
@@ -146,7 +242,7 @@ export default function DivesPage() {
   return (
     <div className="mx-auto max-w-7xl p-6">
 
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
         <div>
           <h1 className="text-4xl font-bold">
@@ -158,12 +254,30 @@ export default function DivesPage() {
           </p>
         </div>
 
-        <Link
-          href="/dives/new"
-          className="rounded-lg bg-cyan-500 px-5 py-3 font-semibold text-slate-900 hover:bg-cyan-400"
-        >
-          + Nieuwe duik
-        </Link>
+        <div className="flex flex-wrap gap-2 sm:justify-end">
+          <button
+            type="button"
+            onClick={exportJson}
+            className="rounded-lg border border-slate-600 px-4 py-3 font-semibold text-slate-200 hover:bg-slate-800"
+          >
+            Backup JSON
+          </button>
+
+          <button
+            type="button"
+            onClick={exportCsv}
+            className="rounded-lg border border-slate-600 px-4 py-3 font-semibold text-slate-200 hover:bg-slate-800"
+          >
+            Export CSV
+          </button>
+
+          <Link
+            href="/dives/new"
+            className="rounded-lg bg-cyan-500 px-5 py-3 font-semibold text-slate-900 hover:bg-cyan-400"
+          >
+            + Nieuwe duik
+          </Link>
+        </div>
 
       </div>
 

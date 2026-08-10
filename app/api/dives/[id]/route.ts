@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createClient } from "@/lib/supabase/server";
 
+const PHOTO_BUCKET = "dive-photos";
+
 function rowToDive(row: any) {
   return {
     ...(row.payload ?? {}),
@@ -14,6 +16,34 @@ function rowToDive(row: any) {
     latitude: row.latitude ?? row.payload?.latitude ?? 0,
     longitude: row.longitude ?? row.payload?.longitude ?? 0,
   };
+}
+
+function photoStoragePath(url: unknown) {
+  const value = String(url ?? "");
+  const marker = `/storage/v1/object/public/${PHOTO_BUCKET}/`;
+  const index = value.indexOf(marker);
+
+  if (index === -1) return null;
+
+  return decodeURIComponent(
+    value.slice(index + marker.length)
+  );
+}
+
+async function removePhotoUrls(urls: unknown[]) {
+  const paths = urls
+    .map(photoStoragePath)
+    .filter((value): value is string => Boolean(value));
+
+  if (paths.length === 0) return;
+
+  const { error } = await supabaseAdmin.storage
+    .from(PHOTO_BUCKET)
+    .remove(paths);
+
+  if (error) {
+    console.error("Foto cleanup fout:", error);
+  }
 }
 
 async function getCurrentUser() {
@@ -82,6 +112,27 @@ export async function PUT(
   const { id } = await context.params;
   const dive = await request.json();
 
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("dives")
+    .select("payload")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existingError) {
+    return NextResponse.json(
+      { error: existingError.message },
+      { status: 500 }
+    );
+  }
+
+  if (!existing) {
+    return NextResponse.json(
+      { error: "Duik niet gevonden." },
+      { status: 404 }
+    );
+  }
+
   const payload = {
     ...dive,
     id,
@@ -119,6 +170,20 @@ export async function PUT(
     );
   }
 
+  const oldPhotos = Array.isArray(existing.payload?.photos)
+    ? existing.payload.photos
+    : [];
+
+  const newPhotos = Array.isArray(dive.photos)
+    ? dive.photos
+    : [];
+
+  const removedPhotos = oldPhotos.filter(
+    (photo: string) => !newPhotos.includes(photo)
+  );
+
+  await removePhotoUrls(removedPhotos);
+
   return new NextResponse(null, { status: 204 });
 }
 
@@ -136,6 +201,27 @@ export async function DELETE(
   }
 
   const { id } = await context.params;
+
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("dives")
+    .select("payload")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existingError) {
+    return NextResponse.json(
+      { error: existingError.message },
+      { status: 500 }
+    );
+  }
+
+  if (!existing) {
+    return NextResponse.json(
+      { error: "Duik niet gevonden." },
+      { status: 404 }
+    );
+  }
 
   const { data, error } = await supabaseAdmin
     .from("dives")
@@ -158,6 +244,12 @@ export async function DELETE(
       { status: 404 }
     );
   }
+
+  const photos = Array.isArray(existing.payload?.photos)
+    ? existing.payload.photos
+    : [];
+
+  await removePhotoUrls(photos);
 
   return new NextResponse(null, { status: 204 });
 }
