@@ -1,0 +1,6 @@
+Voeg deze dependency toe aan dependencies in package.json:
+
+"@supabase/supabase-js": "^2.57.4"
+
+Daarna:
+npm install

@@ -1,0 +1,18 @@
+In components/DiveForm.tsx is GPS al aanwezig. Vervang alleen de success-callback
+van navigator.geolocation.getCurrentPosition door onderstaande versie als je wilt
+dat een nog lege locatienaam automatisch "GPS locatie" wordt:
+
+(position) => {
+  const latitude = Number(position.coords.latitude.toFixed(6));
+  const longitude = Number(position.coords.longitude.toFixed(6));
+
+  setForm((prev) => ({
+    ...prev,
+    location: prev.location || "GPS locatie",
+    latitude,
+    longitude,
+  }));
+},
+
+De bestaande code gebruikt al enableHighAccuracy: true en slaat latitude/longitude
+op in dezelfde Dive die later op de kaart als pin wordt getoond.

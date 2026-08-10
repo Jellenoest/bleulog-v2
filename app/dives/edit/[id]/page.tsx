@@ -12,13 +12,17 @@ export default function EditDivePage() {
 
   const [dive, setDive] = useState<Dive | null>(null);
 
-  useEffect(() => {
-    const found = getDive(id);
+useEffect(() => {
+  async function loadDive() {
+    const found = await getDive(id);
 
     if (found) {
       setDive(found);
     }
-  }, [id]);
+  }
+
+  loadDive();
+}, [id]);
 
   if (!dive) {
     return (

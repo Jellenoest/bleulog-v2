@@ -5,7 +5,10 @@ import { useEffect, useState } from "react";
 
 import { Dive } from "@/server/types/dive";
 import { getDives } from "@/lib/storage";
-
+import {
+  getDashboardStats,
+  type DashboardStats,
+} from "@/lib/api";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import OverviewCards from "@/components/dashboard/OverviewCards";
 import QuickActions from "@/components/dashboard/QuickActions";
@@ -14,8 +17,14 @@ import PersonalRecords from "@/components/dashboard/PersonalRecords";
 
 import DiveMap from "@/components/DiveMap";
 
+
 export default function HomePage() {
+
   const [dives, setDives] = useState<Dive[]>([]);
+
+  const [stats, setStats] =
+    useState<DashboardStats | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,8 +33,13 @@ export default function HomePage() {
 
   async function loadDashboard() {
     try {
-      const data = await getDives();
-      setDives(data);
+    const [diveData, dashboardStats] = await Promise.all([
+  getDives(),
+  getDashboardStats(),
+]);
+
+setDives(diveData);
+setStats(dashboardStats);
     } catch (error) {
       console.error(error);
     } finally {
@@ -41,34 +55,21 @@ export default function HomePage() {
     );
   }
 
-  const totalDives = dives.length;
+  const totalDives = stats?.totalDives ?? 0;
 
-  const totalMinutes = dives.reduce(
-    (sum, dive) => sum + dive.duration,
-    0
-  );
+  const totalMinutes = stats?.totalDiveTime ?? 0;
+ 
+  const maxDepth = stats?.deepestDive ?? 0;
+    
 
-  const maxDepth =
-    dives.length > 0
-      ? Math.max(...dives.map((d) => d.maxDepth))
-      : 0;
-
-  const averageDepth =
-    dives.length > 0
-      ? dives.reduce(
-          (sum, dive) => sum + dive.maxDepth,
-          0
-        ) / dives.length
-      : 0;
+  const averageDepth = stats?.averageDepth ?? 0;
 
   const totalPhotos = dives.reduce(
     (sum, dive) => sum + dive.photos.length,
     0
   );
 
-  const locations = new Set(
-    dives.map((dive) => dive.location)
-  ).size;
+  const locations = stats?.totalLocations ?? 0;
 
   const lastDive =
     dives.length > 0 ? dives[0] : null;

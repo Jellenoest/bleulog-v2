@@ -61,3 +61,16 @@ export async function deleteDive(
     method: "DELETE",
   });
 }
+export interface DashboardStats {
+  totalDives: number;
+  totalDiveTime: number;
+  deepestDive: number;
+  averageDepth: number;
+  averageTemperature: number;
+  totalLocations: number;
+  lastFiveDives: any[];
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  return request<DashboardStats>("/stats");
+}

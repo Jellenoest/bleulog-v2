@@ -39,14 +39,22 @@ router.get("/search", (req, res) => {
     `
     SELECT *
     FROM dive_sites
-    WHERE
-      LOWER(name) LIKE LOWER(?)
+   WHERE
+  LOWER(name) LIKE LOWER(?)
+  OR LOWER(country) LIKE LOWER(?)
+  OR LOWER(region) LIKE LOWER(?)
+  OR LOWER(code) LIKE LOWER(?)
     ORDER BY
       country,
       name
     LIMIT 25
     `,
-    [`%${q}%`],
+  [
+  `%${q}%`,
+  `%${q}%`,
+  `%${q}%`,
+  `%${q}%`,
+],
     (error, rows) => {
       if (error) {
         console.error(error);

@@ -54,7 +54,8 @@ export default function DiveSiteSearch({
           return;
         }
 
-        const data = await response.json();
+        const data: DiveSite[] = await response.json();
+
         setResults(data);
       } catch (error) {
         console.error(error);
@@ -68,7 +69,7 @@ export default function DiveSiteSearch({
   }, [query]);
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
 
       <input
         value={query}
@@ -84,7 +85,7 @@ export default function DiveSiteSearch({
       )}
 
       {results.length > 0 && (
-        <div className="absolute z-50 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-xl">
+        <div className="absolute left-0 right-0 z-50 mt-2 max-h-80 overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
 
           {results.map((site) => (
             <button
