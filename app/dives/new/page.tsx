@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Dive } from "@/server/types/dive";
-import { saveDive } from "@/lib/storage";
+import { getDives, saveDive } from "@/lib/storage";
 
 import DiveForm from "@/components/dives/DiveForm";
 
@@ -13,10 +13,35 @@ export default function NewDivePage() {
 
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    async function setNextDiveNumber() {
+      try {
+        const dives = await getDives();
+        const nextDiveNumber =
+          dives.length > 0
+            ? Math.max(...dives.map((item) => Number(item.diveNumber) || 0)) + 1
+            : 1;
+
+        setDive((current) => ({
+          ...current,
+          diveNumber: nextDiveNumber,
+        }));
+      } catch (error) {
+        console.error("Kon volgend duiknummer niet bepalen:", error);
+        setDive((current) => ({
+          ...current,
+          diveNumber: current.diveNumber > 0 ? current.diveNumber : 1,
+        }));
+      }
+    }
+
+    setNextDiveNumber();
+  }, []);
+
 const [dive, setDive] = useState<Dive>({
   id: crypto.randomUUID(),
 
-  diveNumber: 0,
+  diveNumber: 1,
 
   date: new Date().toISOString().split("T")[0],
 
