@@ -77,7 +77,7 @@ export default function DiveDetailPage() {
         <div className="flex gap-3">
 
           <Link
-            href={`/dives/${dive.id}/edit`}
+            href={`/dives/edit/${dive.id}`}
             className="rounded-lg bg-cyan-500 px-5 py-3 font-semibold text-slate-900"
           >
             Bewerken
