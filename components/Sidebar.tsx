@@ -26,6 +26,11 @@ const menu = [
     href: "/buddies",
     icon: "👥",
   },
+  {
+    name: "Certificaten",
+    href: "/certificates",
+    icon: "🎓",
+  },
 ];
 
 export default function Sidebar() {

@@ -58,6 +58,15 @@ export default function MobileNav() {
               </p>
             </div>
 
+            <Link
+              href="/certificates"
+              onClick={() => setShowMore(false)}
+              className="mb-3 flex w-full items-center gap-3 rounded-lg border border-slate-700 px-4 py-3 font-semibold text-slate-200 hover:bg-slate-800"
+            >
+              <span>🎓</span>
+              <span>Certificaten</span>
+            </Link>
+
             <button
               type="button"
               onClick={logout}
