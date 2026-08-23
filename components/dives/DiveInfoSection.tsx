@@ -27,7 +27,7 @@ export default function DiveInfoSection({
 
           <input
             type="number"
-            value={dive.maxDepth}
+            value={dive.maxDepth === 0 ? "" : dive.maxDepth}
             onChange={(e) =>
               onChange({
                 ...dive,
@@ -45,7 +45,7 @@ export default function DiveInfoSection({
 
           <input
             type="number"
-            value={dive.averageDepth}
+            value={dive.averageDepth === 0 ? "" : dive.averageDepth}
             onChange={(e) =>
               onChange({
                 ...dive,
@@ -63,7 +63,7 @@ export default function DiveInfoSection({
 
           <input
             type="number"
-            value={dive.duration}
+            value={dive.duration === 0 ? "" : dive.duration}
             onChange={(e) =>
               onChange({
                 ...dive,
@@ -81,7 +81,7 @@ export default function DiveInfoSection({
 
           <input
             type="number"
-            value={dive.safetyStop}
+            value={dive.safetyStop === 0 ? "" : dive.safetyStop}
             onChange={(e) =>
               onChange({
                 ...dive,
@@ -99,7 +99,7 @@ export default function DiveInfoSection({
 
           <input
             type="number"
-            value={dive.waterTemperature}
+            value={dive.waterTemperature === 0 ? "" : dive.waterTemperature}
             onChange={(e) =>
               onChange({
                 ...dive,
@@ -117,7 +117,7 @@ export default function DiveInfoSection({
 
           <input
             type="number"
-            value={dive.visibility}
+            value={dive.visibility === 0 ? "" : dive.visibility}
             onChange={(e) =>
               onChange({
                 ...dive,

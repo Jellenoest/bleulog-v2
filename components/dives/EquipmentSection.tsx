@@ -27,7 +27,7 @@ export default function EquipmentSection({
 
           <input
             type="number"
-            value={dive.weight}
+            value={dive.weight === 0 ? "" : dive.weight}
             onChange={(e) =>
               onChange({
                 ...dive,
@@ -96,7 +96,7 @@ export default function EquipmentSection({
 
           <input
             type="number"
-            value={dive.startPressure}
+            value={dive.startPressure === 0 ? "" : dive.startPressure}
             onChange={(e) =>
               onChange({
                 ...dive,
@@ -114,7 +114,7 @@ export default function EquipmentSection({
 
           <input
             type="number"
-            value={dive.endPressure}
+            value={dive.endPressure === 0 ? "" : dive.endPressure}
             onChange={(e) =>
               onChange({
                 ...dive,
@@ -132,7 +132,7 @@ export default function EquipmentSection({
 
           <input
             type="number"
-            value={dive.airConsumption}
+            value={dive.airConsumption === 0 ? "" : dive.airConsumption}
             onChange={(e) =>
               onChange({
                 ...dive,
