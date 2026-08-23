@@ -1,3 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+TARGET="components/diveform/DiveSection.tsx"
+
+mkdir -p "$(dirname "$TARGET")"
+
+cat > "$TARGET" <<'EOF'
 "use client";
 
 import { Dive } from "@/server/types/dive";
@@ -180,3 +188,7 @@ export default function DiveSection({
     </div>
   );
 }
+EOF
+
+echo "Aangepast: $TARGET"
+echo "Controleer nu met: npm run build"

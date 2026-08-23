@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "${1:-$(pwd)}"
+
+test -f package.json || { echo "Voer dit uit in /workspaces/BlueLog"; exit 1; }
+
+echo "1/3 Zoekveld aanpassen naar minimaal 3 letters..."
+
+python3 - <<'PY'
+from pathlib import Path
+p = Path("components/dives/DiveSiteSearch.tsx")
+s = p.read_text()
+
+s = s.replace("    if (!q) return sites;", "    if (q.length < 3) return [];")
+s = s.replace(
+    "      {open && !loading && (",
+    "      {open && !loading && query.trim().length >= 3 && ("
+)
+
+needle = '''      {error && (
+        <p className="mt-2 text-sm text-amber-400">
+          {error}
+        </p>
+      )}
+'''
+
+replacement = '''      {error && (
+        <p className="mt-2 text-sm text-amber-400">
+          {error}
+        </p>
+      )}
+
+      {!loading && !error && query.trim().length > 0 && query.trim().length < 3 && (
+        <p className="mt-2 text-sm text-slate-400">
+          Typ minimaal 3 letters om een bekende duikstek te zoeken.
+        </p>
+      )}
+'''
+
+if needle in s:
+    s = s.replace(needle, replacement)
+
+p.write_text(s)
+PY
+
+echo "2/3 Uitgebreide duikstekdatabase schrijven..."
+
+cat > supabase/seed-dive-sites.sql <<'EOF'
+insert into public.dive_sites
+(code, name, country, country_code, region, latitude, longitude, water_type, entry_type, difficulty, max_depth, description)
+values
+('NL-ZLD-001','Zeelandbrug Noord','Nederland','NL','Zeeland',51.629366,3.913579,'Zout','Kant','Gevorderd',40,'GPS bij de bekende instaplocatie aan de noordzijde van de Zeelandbrug. Stromingsduik.'),
+('NL-ZLD-002','Den Osse Nieuwe Kerkeweg','Nederland','NL','Zeeland',51.742712,3.879649,'Zout','Kant','Beginner',30,'Bekende Grevelingen-duikstek bij Nieuwe Kerkeweg.'),
+('NL-ZLD-003','Dreischor Gemaal','Nederland','NL','Zeeland',51.707845,4.000161,'Zout','Kant','Beginner',30,'Bekende instap bij het gemaal aan het Grevelingenmeer.'),
+('NL-ZLD-004','Dreischor Zuidlangeweg','Nederland','NL','Zeeland',51.711315,3.995097,'Zout','Kant','Beginner',25,'Duikstek aan het einde van de Zuidlangeweg.'),
+('NL-ZLD-005','Bergse Diepsluis / Oesterdam','Nederland','NL','Zeeland',51.516755,4.172616,'Zout','Kant','Gemiddeld',35,'Bekende duikstek bij de Oesterdam.'),
+('NL-ZLD-006','Anna Jacobapolder','Nederland','NL','Zeeland',51.642777,4.097986,'Zout','Kant','Gemiddeld',30,'Oosterschelde-duikstek.'),
+('NL-ZLD-007','Gemaal van Strijenham','Nederland','NL','Zeeland',51.521508,4.143326,'Zout','Kant','Gemiddeld',30,'Instap bij het gemaal van Strijenham.'),
+('NL-ZLD-008','Gorishoek Plaat / Blokken','Nederland','NL','Zeeland',51.529438,4.071207,'Zout','Kant','Gevorderd',35,'Oosterschelde-duikstek bij Gorishoek.'),
+('NL-ZLD-009','Gorishoek Punt','Nederland','NL','Zeeland',51.525246,4.077001,'Zout','Kant','Gevorderd',35,'Duikstek bij de punt van Gorishoek.'),
+('NL-ZLD-010','Gorishoek Wrak van den Boer','Nederland','NL','Zeeland',51.525780,4.082537,'Zout','Kant','Gevorderd',35,'Duikstek bij Gorishoek.'),
+('NL-ZLD-011','Putti''s Place / Sas van Goes','Nederland','NL','Zeeland',51.544560,3.925681,'Zout','Kant','Gemiddeld',30,'Bekende duikstek bij het Sas van Goes.'),
+('NL-ZLD-012','Sas van Goes','Nederland','NL','Zeeland',51.540437,3.930144,'Zout','Kant','Gemiddeld',30,'Duikstek bij Wilhelminadorp / Sas van Goes.'),
+('NL-ZLD-013','Scharendijke Haven','Nederland','NL','Zeeland',51.740463,3.845569,'Zout','Kant','Beginner',35,'Grevelingen-duikstek bij Scharendijke.'),
+('NL-ZLD-014','Scharendijke Koepeltje','Nederland','NL','Zeeland',51.739799,3.830532,'Zout','Kant','Beginner',30,'Grevelingen-duikstek bij het Koepeltje.'),
+('NL-ZLD-015','Sint-Annaland','Nederland','NL','Zeeland',51.607757,4.104381,'Zout','Kant','Gemiddeld',30,'Oosterschelde-duikstek bij Sint-Annaland.'),
+('NL-ZLD-016','Stavenisse Vissteiger','Nederland','NL','Zeeland',51.595735,4.006341,'Zout','Kant','Gemiddeld',30,'Duikstek bij Stavenisse.'),
+('NL-ZLD-017','Vuilnisbelt','Nederland','NL','Zeeland',51.525006,4.093373,'Zout','Kant','Gevorderd',35,'Oosterschelde-duikstek.'),
+('NL-ZLD-018','Wemeldinge Oost / Linda','Nederland','NL','Zeeland',51.521375,4.005697,'Zout','Kant','Gevorderd',35,'Duikstek bij Wemeldinge.'),
+('NL-ZLD-019','Wemeldinge Parking','Nederland','NL','Zeeland',51.529145,3.965099,'Zout','Kant','Gemiddeld',30,'Duikstek bij Wemeldinge.'),
+('NL-ZLD-020','Wemeldinge Punt / Hoek','Nederland','NL','Zeeland',51.524485,3.989046,'Zout','Kant','Gevorderd',35,'Oosterschelde-duikstek bij de punt.'),
+('NL-ZLD-021','Wemeldinge Tetjes','Nederland','NL','Zeeland',51.527997,3.970377,'Zout','Kant','Gemiddeld',30,'Duikstek bij Wemeldinge.'),
+('NL-ZLD-022','Zoetersbout','Nederland','NL','Zeeland',51.644096,4.090133,'Zout','Kant','Gemiddeld',30,'Bekende Oosterschelde-duikstek.'),
+('NL-ZLD-023','Zuidbout','Nederland','NL','Zeeland',51.614153,3.958919,'Zout','Kant','Gemiddeld',30,'Bekende Oosterschelde-duikstek.'),
+('NL-ZH-001','Oostvoornse Meer','Nederland','NL','Zuid-Holland',51.932174,4.082193,'Zoet','Kant','Beginner',40,'Bekende zoetwaterduiklocatie bij Oostvoorne.'),
+('NL-UT-001','Vinkeveense Plassen - Zandeiland 4','Nederland','NL','Utrecht',52.249600,4.956700,'Zoet','Kant','Beginner',22,'Populaire zoetwaterduikstek bij Vinkeveen.'),
+('NL-UT-002','Vinkeveense Plassen - Zandeiland 9','Nederland','NL','Utrecht',52.245200,4.964800,'Zoet','Kant','Beginner',18,'Populaire trainings- en recreatieduikstek.'),
+('CW-001','Tugboat Beach','Curaçao','CW','Caracasbaai',12.072900,-68.861400,'Zout','Kant','Beginner',18,'Shore entry bij Tugboat Beach; korte zwemafstand naar het bekende wrak.'),
+('CW-002','Playa Kalki / Alice in Wonderland','Curaçao','CW','Westpunt',12.370200,-69.157800,'Zout','Kant','Beginner',35,'Shore entry vanaf Playa Kalki / GO WEST Diving.'),
+('CW-003','Playa Lagun','Curaçao','CW','Lagun',12.317500,-69.151944,'Zout','Kant','Beginner',30,'Beschutte strandinstap in Playa Lagun.'),
+('CW-004','Playa Porto Mari','Curaçao','CW','Sint Willibrordus',12.218851,-69.085350,'Zout','Kant','Beginner',35,'Bekende shore dive met zandstrand en dubbelrif.'),
+('CW-005','Cas Abao Beach','Curaçao','CW','Banda Abou',12.227850,-69.092310,'Zout','Kant','Beginner',35,'Shore entry vanaf Cas Abao Beach.'),
+('CW-006','Playa Piskadó / Playa Grandi','Curaçao','CW','Westpunt',12.369528,-69.153925,'Zout','Kant','Beginner',25,'Shore entry bij vissersstrand Playa Piskadó.'),
+('CW-007','Director''s Bay','Curaçao','CW','Caracasbaai',12.066256,-68.860139,'Zout','Kant','Gemiddeld',35,'Shore entry bij Director''s Bay.'),
+('CW-008','Daaibooi Beach','Curaçao','CW','Sint Willibrordus',12.212222,-69.084444,'Zout','Kant','Beginner',30,'Strandinstap bij Daaibooi.')
+on conflict (code) do update set
+  name = excluded.name,
+  country = excluded.country,
+  country_code = excluded.country_code,
+  region = excluded.region,
+  latitude = excluded.latitude,
+  longitude = excluded.longitude,
+  water_type = excluded.water_type,
+  entry_type = excluded.entry_type,
+  difficulty = excluded.difficulty,
+  max_depth = excluded.max_depth,
+  description = excluded.description;
+EOF
+
+echo "3/3 Build controleren..."
+npm run build
+
+echo
+echo "KLAAR."
+echo "Voer daarna supabase/seed-dive-sites.sql opnieuw uit in Supabase SQL Editor."
+echo "Daarna:"
+echo "git add components/dives/DiveSiteSearch.tsx supabase/seed-dive-sites.sql"
+echo "git commit -m 'Expand dive sites and require 3 letter search'"
+echo "git push"
