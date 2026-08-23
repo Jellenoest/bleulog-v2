@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -12,7 +13,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     try {
@@ -21,20 +24,21 @@ export default function LoginPage() {
 
       const supabase = createClient(rememberMe);
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      const { error } =
+        await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       router.replace("/");
       router.refresh();
     } catch (error) {
       console.error("Inloggen mislukt:", error);
-      setError("E-mailadres of wachtwoord is niet juist.");
+      setError(
+        "E-mailadres of wachtwoord is niet juist."
+      );
     } finally {
       setLoading(false);
     }
@@ -53,7 +57,10 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5"
+        >
           <div>
             <label className="mb-2 block text-sm font-semibold">
               E-mailadres
@@ -63,7 +70,9 @@ export default function LoginPage() {
               autoComplete="email"
               required
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) =>
+                setEmail(event.target.value)
+              }
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 outline-none focus:border-cyan-500"
             />
           </div>
@@ -77,20 +86,35 @@ export default function LoginPage() {
               autoComplete="current-password"
               required
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) =>
+                setPassword(event.target.value)
+              }
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 outline-none focus:border-cyan-500"
             />
           </div>
 
-          <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(event) => setRememberMe(event.target.checked)}
-              className="h-4 w-4 rounded border-slate-600 bg-slate-800 accent-cyan-500"
-            />
-            <span>Aangemeld blijven</span>
-          </label>
+          <div className="flex items-center justify-between gap-4">
+            <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(event) =>
+                  setRememberMe(
+                    event.target.checked
+                  )
+                }
+                className="h-4 w-4 accent-cyan-500"
+              />
+              <span>Aangemeld blijven</span>
+            </label>
+
+            <Link
+              href="/forgot-password"
+              className="text-sm font-semibold text-cyan-400 hover:text-cyan-300"
+            >
+              Wachtwoord vergeten?
+            </Link>
+          </div>
 
           {error && (
             <div className="rounded-lg border border-red-800 bg-red-950/40 p-3 text-sm text-red-300">
@@ -103,7 +127,9 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-lg bg-cyan-500 px-5 py-3 font-bold text-slate-950 hover:bg-cyan-400 disabled:cursor-wait disabled:opacity-60"
           >
-            {loading ? "Inloggen..." : "Inloggen"}
+            {loading
+              ? "Inloggen..."
+              : "Inloggen"}
           </button>
         </form>
 
