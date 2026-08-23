@@ -8,6 +8,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -18,7 +19,7 @@ export default function LoginPage() {
       setLoading(true);
       setError("");
 
-      const supabase = createClient();
+      const supabase = createClient(rememberMe);
 
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -80,6 +81,16 @@ export default function LoginPage() {
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 outline-none focus:border-cyan-500"
             />
           </div>
+
+          <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(event) => setRememberMe(event.target.checked)}
+              className="h-4 w-4 rounded border-slate-600 bg-slate-800 accent-cyan-500"
+            />
+            <span>Aangemeld blijven</span>
+          </label>
 
           {error && (
             <div className="rounded-lg border border-red-800 bg-red-950/40 p-3 text-sm text-red-300">
