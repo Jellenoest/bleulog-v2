@@ -43,6 +43,7 @@ export default function DiveSiteSearch({
     async function loadSites() {
       try {
         setLoading(true);
+
         const response = await fetch("/api/dive-sites", {
           cache: "no-store",
         });
@@ -59,6 +60,7 @@ export default function DiveSiteSearch({
         }
       } catch (err) {
         console.error(err);
+
         if (active) {
           setError("Duikstekken konden niet worden geladen.");
         }
@@ -74,22 +76,59 @@ export default function DiveSiteSearch({
     };
   }, []);
 
-  const filteredSites = useMemo(() => {
+  const visibleSites = useMemo(() => {
     const q = query.trim().toLowerCase();
 
-    if (q.length < 3) return [];
+    const sorted = [...sites].sort((a, b) => {
+      const countryCompare = a.country.localeCompare(
+        b.country,
+        "nl"
+      );
 
-    return sites.filter((site) =>
+      if (countryCompare !== 0) {
+        return countryCompare;
+      }
+
+      return a.name.localeCompare(b.name, "nl");
+    });
+
+    if (q.length === 0) {
+      return sorted;
+    }
+
+    if (q.length < 3) {
+      return [];
+    }
+
+    return sorted.filter((site) =>
       [
         site.name,
         site.region,
         site.country,
         site.code,
       ].some((text) =>
-        String(text ?? "").toLowerCase().includes(q)
+        String(text ?? "")
+          .toLowerCase()
+          .includes(q)
       )
     );
   }, [query, sites]);
+
+  const groupedSites = useMemo(() => {
+    return visibleSites.reduce<
+      Record<string, DiveSite[]>
+    >((groups, site) => {
+      const country = site.country || "Overig";
+
+      if (!groups[country]) {
+        groups[country] = [];
+      }
+
+      groups[country].push(site);
+
+      return groups;
+    }, {});
+  }, [visibleSites]);
 
   return (
     <div className="relative w-full">
@@ -101,9 +140,12 @@ export default function DiveSiteSearch({
           setOpen(true);
         }}
         onBlur={() => {
-          window.setTimeout(() => setOpen(false), 150);
+          window.setTimeout(
+            () => setOpen(false),
+            150
+          );
         }}
-        placeholder="Zoek of kies een bekende duikstek..."
+        placeholder="Klik om te kiezen of typ om te zoeken..."
         className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3"
       />
 
@@ -119,43 +161,66 @@ export default function DiveSiteSearch({
         </p>
       )}
 
-      {!loading && !error && query.trim().length > 0 && query.trim().length < 3 && (
-        <p className="mt-2 text-sm text-slate-400">
-          Typ minimaal 3 letters om een bekende duikstek te zoeken.
-        </p>
-      )}
+      {!loading &&
+        !error &&
+        query.trim().length > 0 &&
+        query.trim().length < 3 && (
+          <p className="mt-2 text-sm text-slate-400">
+            Typ minimaal 3 letters om te zoeken,
+            of maak het veld leeg om alle duikstekken te zien.
+          </p>
+        )}
 
-      {open && !loading && query.trim().length >= 3 && (
-        <div className="absolute left-0 right-0 z-50 mt-2 max-h-80 overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
-          {filteredSites.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-slate-400">
-              Geen bekende duikstek gevonden. Je kunt de naam zelf invullen en
-              de locatie op de kaart aanwijzen.
-            </div>
-          ) : (
-            filteredSites.map((site) => (
-              <button
-                key={site.id}
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  onSelect(site);
-                  setQuery(site.name);
-                  setOpen(false);
-                }}
-                className="block w-full border-b border-slate-800 px-4 py-3 text-left hover:bg-slate-800"
-              >
-                <div className="font-semibold">
-                  {site.name}
-                </div>
-                <div className="text-sm text-slate-400">
-                  {site.region} • {site.country}
-                </div>
-              </button>
-            ))
-          )}
-        </div>
-      )}
+      {open &&
+        !loading &&
+        !error &&
+        (query.trim().length === 0 ||
+          query.trim().length >= 3) && (
+          <div className="absolute left-0 right-0 z-50 mt-2 max-h-96 overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
+            {visibleSites.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-slate-400">
+                Geen bekende duikstek gevonden.
+              </div>
+            ) : (
+              Object.entries(groupedSites).map(
+                ([country, countrySites]) => (
+                  <div key={country}>
+                    <div className="sticky top-0 border-b border-slate-700 bg-slate-950 px-4 py-2 text-sm font-bold text-cyan-400">
+                      {country}
+                    </div>
+
+                    {countrySites.map((site) => (
+                      <button
+                        key={site.id}
+                        type="button"
+                        onMouseDown={(e) =>
+                          e.preventDefault()
+                        }
+                        onClick={() => {
+                          onSelect(site);
+                          setQuery(site.name);
+                          setOpen(false);
+                        }}
+                        className="block w-full border-b border-slate-800 px-4 py-3 text-left hover:bg-slate-800"
+                      >
+                        <div className="font-semibold">
+                          {site.name}
+                        </div>
+
+                        <div className="text-sm text-slate-400">
+                          {site.region}
+                          {site.code
+                            ? ` • ${site.code}`
+                            : ""}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )
+              )
+            )}
+          </div>
+        )}
     </div>
   );
 }
